@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff CRM Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --error: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #f8fafc, #eef2ff);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* LOGIN */
+    .login-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-card {
+      background: var(--card);
+      padding: 32px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    /* DASHBOARD */
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      padding: 16px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    main {
+      padding: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .save-btn {
+      margin-top: 6px;
+      width: 100%;
+    }
+
+    .success-banner {
+      color: var(--success);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 900px) {
+      table {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="login-wrapper">
+  <div class="login-card">
+    <h1>Staff Login</h1>
+    <input type="password" id="passwordInput" placeholder="Enter password" />
+    <button onclick="checkPassword()">Enter</button>
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardView" style="display:none;">
+  <header>
+    <strong>Staff CRM Dashboard</strong>
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="Search name or email" />
+      <select id="stageFilter">
+        <option value="">All Stages</option>
+        <option>New</option>
+        <option>Contacted</option>
+        <option>Qualified</option>
+        <option>Proposal</option>
+        <option>Won</option>
+        <option>Lost</option>
+      </select>
+      <input type="text" id="staffName" placeholder="Staff name (optional)" />
+    </div>
+  </header>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Interest</th>
+          <th>Value (€)</th>
+          <th>Stage</th>
+          <th>Notes</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="leadsTable"></tbody>
+    </table>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    onSnapshot,
+    doc,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  // TODO: Replace with your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDBJsmAcalocllQgvglR0pzfNBjuMXcUMg",
+    authDomain: "crm-project-e509f.firebaseapp.com",
+    projectId: "crm-project-e509f",
+    storageBucket: "crm-project-e509f.firebasestorage.app",
+    messagingSenderId: "714683639312",
+    appId: "1:714683639312:web:de2e7a6a16c5372e020c95"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const PASSWORD = "NCI@123";
+
+  const tableBody = document.getElementById("leadsTable");
+  const stageFilter = document.getElementById("stageFilter");
+  const searchInput = document.getElementById("searchInput");
+
+  let leads = [];
+
+  window.checkPassword = () => {
+    const input = document.getElementById("passwordInput").value;
+    if (input === PASSWORD) {
+      document.getElementById("loginView").style.display = "none";
+      document.getElementById("dashboardView").style.display = "block";
+      loadLeads();
+    } else {
+      document.getElementById("loginError").textContent = "Incorrect password";
+    }
+  };
+
+  function loadLeads() {
+    onSnapshot(collection(db, "leads"), (snapshot) => {
+      leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderTable();
+    });
+  }
+
+  function renderTable() {
+    const filterStage = stageFilter.value;
+    const search = searchInput.value.toLowerCase();
+
+    tableBody.innerHTML = "";
+
+    leads
+      .filter(l =>
+        (!filterStage || l.stage === filterStage) &&
+        (!search || l.name.toLowerCase().includes(search) || l.email.toLowerCase().includes(search))
+      )
+      .forEach(l => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${l.name}</td>
+          <td>${l.email}</td>
+          <td>${l.phone}</td>
+          <td>${l.interest || "-"}</td>
+          <td>${l.value}</td>
+          <td>
+            <select id="stage-${l.id}">
+              ${["New","Contacted","Qualified","Proposal","Won","Lost"]
+                .map(s => `<option ${l.stage===s?"selected":""}>${s}</option>`).join("")}
+            </select>
+          </td>
+          <td>
+            <textarea id="notes-${l.id}">${l.notes || ""}</textarea>
+          </td>
+          <td>
+            <button class="save-btn" onclick="saveLead('${l.id}')">Save</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+  }
+
+  window.saveLead = async (id) => {
+    const stage = document.getElementById(`stage-${id}`).value;
+    const notes = document.getElementById(`notes-${id}`).value;
+    const staff = document.getElementById("staffName").value || "Staff";
+
+    try {
+      await updateDoc(doc(db, "leads", id), {
+        stage,
+        notes,
+        updatedBy: staff,
+        updatedAt: serverTimestamp()
+      });
+      alert("Updated successfully");
+    } catch (e) {
+      alert("Update failed");
+      console.error(e);
+    }
+  };
+
+  stageFilter.addEventListener("change", renderTable);
+  searchInput.addEventListener("input", renderTable);
+</script>
+
+</body>
+</html>
