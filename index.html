@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SME Sales Enquiry | Contact Us</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --success: #16a34a;
+      --error: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc, #eef2ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(37,99,235,0.45);
+    }
+
+    .banner {
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .success {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .error {
+      background: #fee2e2;
+      color: var(--error);
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Lead Capture Form -->
+    <div class="card">
+      <h1>Talk to Our Sales Team</h1>
+      <p>Leave your details and we’ll contact you shortly.</p>
+
+      <div id="successBanner" class="banner success">
+        Your enquiry has been submitted successfully.
+      </div>
+      <div id="errorBanner" class="banner error"></div>
+
+      <form id="leadForm">
+        <label>Name *</label>
+        <input type="text" id="name" required />
+
+        <label>Email *</label>
+        <input type="email" id="email" required />
+
+        <label>Phone *</label>
+        <input type="tel" id="phone" required />
+
+        <label>Area of Interest</label>
+        <textarea id="interest" placeholder="Product, service, or enquiry details"></textarea>
+
+        <label>Estimated Value (€) *</label>
+        <input type="number" id="value" min="1" required />
+
+        <button type="submit">Submit Enquiry</button>
+      </form>
+
+      <!-- Internal Navigation -->
+      <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="staff.html" style="flex:1; text-align:center; text-decoration:none;">
+          <button type="button">Staff Dashboard</button>
+        </a>
+        <a href="insights.html" style="flex:1; text-align:center; text-decoration:none;">
+          <button type="button">Insights Dashboard</button>
+        </a>
+      </div>
+
+      <p class="footer-note">Internal access (staff only)</p>
+    </div>
+
+    <!-- Explainer Card -->
+    <div class="card">
+      <h1>How We Use Your Data</h1>
+      <p>
+        The information you submit is used strictly for internal sales follow-up.
+        Our team will review your enquiry and contact you with relevant information.
+      </p>
+      <p>
+        This system is part of a secure cloud-based CRM pipeline used by our staff to
+        manage customer relationships efficiently.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBJsmAcalocllQgvglR0pzfNBjuMXcUMg",
+      authDomain: "crm-project-e509f.firebaseapp.com",
+      projectId: "crm-project-e509f",
+      storageBucket: "crm-project-e509f.firebasestorage.app",
+      messagingSenderId: "714683639312",
+      appId: "1:714683639312:web:de2e7a6a16c5372e020c95"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("leadForm");
+    const successBanner = document.getElementById("successBanner");
+    const errorBanner = document.getElementById("errorBanner");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      successBanner.style.display = "none";
+      errorBanner.style.display = "none";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const interest = document.getElementById("interest").value.trim();
+      const value = Number(document.getElementById("value").value);
+
+      if (!name || !email || !phone || value <= 0) {
+        errorBanner.textContent = "Please fill all required fields correctly.";
+        errorBanner.style.display = "block";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "leads"), {
+          name,
+          email,
+          phone,
+          interest,
+          value,
+          stage: "New",
+          notes: "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        form.reset();
+        successBanner.style.display = "block";
+      } catch (err) {
+        errorBanner.textContent = "Something went wrong. Please try again later.";
+        errorBanner.style.display = "block";
+        console.error(err);
+      }
+    });
+  </script>
+
+</body>
+</html>
